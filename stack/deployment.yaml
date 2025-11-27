@@ -33,7 +33,7 @@ spec:
       terminationGracePeriodSeconds: 5
       containers:
         - name: stock-flask-ut
-          image: 642757235737.dkr.ecr.us-east-2.amazonaws.com/stock-ut:latest
+          image: 979750876373.dkr.ecr.us-east-1.amazonaws.com/stock-app:v74
           ports:
             - containerPort: 8000
               name: flask-ut-port

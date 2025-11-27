@@ -1,0 +1,96 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: stock-flask-svc-ut
+  namespace: theja-ut
+  labels:
+    app: stock-flask-ut
+spec:
+  ports:
+    - port: 8000
+      targetPort: 8000
+      name: flask-ut-port
+  selector:
+    app: stock-flask-ut
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: stock-flask-ut
+  namespace: theja-ut
+spec:
+  serviceName: "stock-flask-svc-ut"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stock-flask-ut
+  template:
+    metadata:
+      labels:
+        app: stock-flask-ut
+    spec:
+      terminationGracePeriodSeconds: 5
+      containers:
+        - name: stock-flask-ut
+          image: 642757235737.dkr.ecr.us-east-2.amazonaws.com/stock-ut:latest
+          ports:
+            - containerPort: 8000
+              name: flask-ut-port
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 3
+          envFrom:
+            - secretRef:
+                name: stock-flask-ut-secret
+            - configMapRef:
+                name: stock-flask-ut-cm
+          volumeMounts:
+            - name: static
+              mountPath: /app/static
+      volumes:
+        - name: static
+          persistentVolumeClaim:
+            claimName: stock-static-ut-pvc
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: stock-flask-ut-ingress
+  namespace: theja-ut
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/hsts: "true"
+    nginx.ingress.kubernetes.io/hsts-max-age: "31536000"
+    nginx.ingress.kubernetes.io/hsts-include-subdomains: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - test.shrvnkummr.space
+      secretName: stock-flask-ut-tls
+  rules:
+    - host: test.shrvnkummr.space
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: stock-flask-svc-ut
+                port:
+                  number: 8000
+

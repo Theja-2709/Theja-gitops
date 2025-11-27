@@ -38,10 +38,10 @@ spec:
             - containerPort: 8000
               name: flask-ut-port
 
-          # 🩺 Health Probes (optimized)
+          # 🩺 Health Probes (now using `/`)
           livenessProbe:
             httpGet:
-              path: /health        # Change to / if your app doesn't have /health
+              path: /
               port: 8000
             initialDelaySeconds: 40
             periodSeconds: 15
@@ -50,32 +50,30 @@ spec:
 
           readinessProbe:
             httpGet:
-              path: /health        # Change to / if /health doesn’t exist
+              path: /
               port: 8000
             initialDelaySeconds: 20
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 5
 
-          # 🧠 Graceful shutdown before restart
+          # 🧠 Graceful shutdown
           lifecycle:
             preStop:
               exec:
                 command: ["sleep", "10"]
 
-          # 🧩 Environment from Secrets and ConfigMap
           envFrom:
             - secretRef:
                 name: stock-flask-ut-secret
             - configMapRef:
                 name: stock-flask-ut-cm
 
-          # 📦 Persistent volume for static assets
           volumeMounts:
             - name: static
               mountPath: /app/static
 
-          # ⚙️ Recommended resource settings
+          # ⚙️ Resource tuning for stability
           resources:
             requests:
               cpu: 200m

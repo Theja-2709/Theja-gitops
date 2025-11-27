@@ -30,7 +30,7 @@ spec:
       labels:
         app: stock-flask-ut
     spec:
-      terminationGracePeriodSeconds: 10
+      terminationGracePeriodSeconds: 15
       containers:
         - name: stock-flask-ut
           image: 979750876373.dkr.ecr.us-east-1.amazonaws.com/stock-app:v79
@@ -38,26 +38,26 @@ spec:
             - containerPort: 8000
               name: flask-ut-port
 
-          # 🩺 Health Probes (now using `/`)
+          # 🩺 Health Probes tuned for slow start
           livenessProbe:
             httpGet:
               path: /
               port: 8000
-            initialDelaySeconds: 40
-            periodSeconds: 15
-            timeoutSeconds: 5
+            initialDelaySeconds: 60    # wait longer before checking
+            periodSeconds: 20
+            timeoutSeconds: 10         # wait up to 10s for response
             failureThreshold: 5
 
           readinessProbe:
             httpGet:
               path: /
               port: 8000
-            initialDelaySeconds: 20
-            periodSeconds: 10
-            timeoutSeconds: 5
+            initialDelaySeconds: 50
+            periodSeconds: 15
+            timeoutSeconds: 10
             failureThreshold: 5
 
-          # 🧠 Graceful shutdown
+          # 🧠 Graceful shutdown before restart
           lifecycle:
             preStop:
               exec:
@@ -73,7 +73,7 @@ spec:
             - name: static
               mountPath: /app/static
 
-          # ⚙️ Resource tuning for stability
+          # ⚙️ Resource tuning
           resources:
             requests:
               cpu: 200m
